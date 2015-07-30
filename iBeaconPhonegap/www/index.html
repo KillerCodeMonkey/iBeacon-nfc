@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html ng-app="app">
+    <head>
+        <title>iBeacon - Test</title>
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+        <meta charset="utf-8" />
+        <meta name="apple-mobile-web-app-capable" content="yes">
+
+        <!-- Style -->
+        <link rel="stylesheet" href="ionic.min.css">
+
+        <!-- Scripts -->
+        <script src="cordova.js" type="text/javascript"></script>
+        <script src="ionic.bundle.min.js" type="text/javascript"></script>
+		<script>
+			angular.module('app', []).controller('AppCtrl', ['$window', function ($window) {
+				console.log($window.cordova);
+				if ($window.cordova) {
+					ionic.Platform.ready(function () {
+					
+						var logToDom = function (message) {
+							var e = document.createElement('label');
+							e.innerText = message;
+
+							var br = document.createElement('br');
+							var br2 = document.createElement('br');
+							document.body.appendChild(e);
+							document.body.appendChild(br);
+							document.body.appendChild(br2);
+
+							window.scrollTo(0, window.document.height);
+						};
+
+						var delegate = new cordova.plugins.locationManager.Delegate();
+
+						delegate.didDetermineStateForRegion = function (pluginResult) {
+
+							console.log('didDetermineStateForRegion');
+						};
+
+						delegate.didStartMonitoringForRegion = function (pluginResult) {
+							console.log('didStartMonitoringForRegion:', pluginResult);
+						};
+
+						delegate.didRangeBeaconsInRegion = function (pluginResult) {
+							console.log(pluginResult);
+						};
+
+						var uuid = 'E2C56db5-DFFB-48D2-B060-D0F5A71096E0';
+						var identifier = 'test';
+						var minor = 5;
+						var major = 5;
+						var beaconRegion = new cordova.plugins.locationManager.BeaconRegion(identifier, uuid, major, minor);
+
+						cordova.plugins.locationManager.setDelegate(delegate);
+
+						// required in iOS 8+
+						cordova.plugins.locationManager.requestWhenInUseAuthorization(); 
+						// or cordova.plugins.locationManager.requestAlwaysAuthorization()
+
+						cordova.plugins.locationManager.startMonitoringForRegion(beaconRegion)
+							.fail(console.error)
+							.done(function () {
+								console.log('done', arguments);
+							});
+							
+						// Start ranging.
+						cordova.plugins.locationManager.startRangingBeaconsInRegion(beaconRegion)
+							.fail(console.error)
+							.done();
+					});
+				}
+			}]);
+		</script>
+    </head>
+    <body ng-controller="AppCtrl">
+        <ion-content>
+			hallo
+		</ion-content>
+    </body>
+</html>

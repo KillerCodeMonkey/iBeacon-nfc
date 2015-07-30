@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html ng-app="app">
+    <head>
+        <title>nfc - Test</title>
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+        <meta charset="utf-8" />
+        <meta name="apple-mobile-web-app-capable" content="yes">
+
+        <!-- Style -->
+        <link rel="stylesheet" href="ionic.min.css">
+
+        <!-- Scripts -->
+        <script src="cordova.js" type="text/javascript"></script>
+        <script src="ionic.bundle.min.js" type="text/javascript"></script>
+		<script>
+			angular.module('app', []).controller('AppCtrl', ['$scope', '$window', '$timeout', function ($scope, $window, $timeout) {
+				
+				$scope.write, $scope.erase;
+				
+				function reset() {
+					$timeout(function () {
+						$scope.write = false;
+						$scope.erase = false;
+					});
+				}
+				
+				if ($window.cordova) {
+					ionic.Platform.ready(function () {	
+						// tag discovered listener
+						nfc.addTagDiscoveredListener(function () {
+							console.log('Discovered', arguments);
+						}, function () {
+							console.log('#ADDED: TagDiscoveredListener');
+						}, function () {
+							console.log('!#NOTADDED: TagDiscoveredListener');
+						});
+						
+						// ndef is read
+						nfc.addNdefListener(function (evt) {
+							console.log('Read Ndef', evt);
+							$timeout(function () {
+								$scope.nfc = evt;
+							});
+							if ($scope.write) {
+								nfc.write([ndef.textRecord($scope.content)], function () {
+									console.log('written');
+									reset();
+								}, function () {
+									console.log('writing failed');
+									reset();
+								});
+							} else if ($scope.erase) {
+								nfc.erase(function () {
+									console.log('erased');
+									reset();
+								}, function () {
+									console.log('erasing failed');
+									reset();
+								});
+							}
+						}, function () {
+							console.log('#ADDED: addNdefListener');
+						}, function () {
+							console.log('!#NOTADDED: addNdefListener');
+						});
+					});
+					
+					$scope.writer = function () {
+						$scope.write = true;
+					};
+					
+					$scope.clearer = function () {
+						$scope.erase = true;
+					};
+					
+					$scope.canceler = function () {
+						reset();
+					};
+				}
+			}]);
+		</script>
+    </head>
+    <body ng-controller="AppCtrl">
+        <ion-content>
+			Hallo, hier ist dein cooles NFC-Cool
+			<input ng-model="content" placeholder="nfc content">
+			Inhalt: {{nfc}}
+			<button type="button" ng-click="writer()" ng-disabled="erase || write">Beschreiben</button>
+			<button type="button" ng-click="clearer()" ng-disabled="erase || write">Reinigen</button>
+			<button type="button" ng-click="canceler()" ng-disabled="!erase && !write">Abbrechen</button>
+		</ion-content>
+    </body>
+</html>
